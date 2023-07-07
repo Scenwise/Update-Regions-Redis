@@ -37,7 +37,7 @@ public class RedisProperties {
     private String password;
     @Value("${redis.ssl}")
     private Boolean ssl;
-    private String prefix; // TODO: discuss, will we keep the 'redisTravelTimeDao'?
+    private String prefix;
     /**
      * Minimum idle connections in the connection pool (default: 24).
      */

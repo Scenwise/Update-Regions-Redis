@@ -1,3 +1,6 @@
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import nl.scenwise.regionUpdater.service.RedisStreamingUtil;
 import nl.scenwise.regionUpdater.updator.RegionsParser;
 import org.junit.Before;
@@ -8,6 +11,7 @@ import org.redisson.api.RedissonClient;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 import java.util.logging.Logger;
 
 public class TestAllRegions {
@@ -18,16 +22,24 @@ public class TestAllRegions {
 
     @Before
     public void setUp(){
-        redissonClient = RedisStreamingUtil.getInstance().getRedisClient();
+        try {
+            redissonClient = RedisStreamingUtil.getInstance().getRedisClient();
+        }catch(Exception e) {
+            System.out.println("Error occured: " + e.getMessage() +"\nAttempting to connect again");
+            this.redissonClient = RedisStreamingUtil.getInstance().getRedisClient();}
         this.log = Logger.getLogger(TestAllRegions.class.getSimpleName());
         this.regionBucketName = "region:polygons";
         this.geoJsonRegionPolygonFileName = "login-regions.json";
+
     }
 
     @Test
     public void refreshRegionPolygons() {
-        if(this.redissonClient.getBucket(regionBucketName).delete()) {
-            log.info("Bucket deleted successfully. Reloading coordinates...");
+        RBucket<Map<String, ArrayList<ArrayList<Double>>>> regionBucket = this.redissonClient.getBucket(this.regionBucketName);
+        if(regionBucket.isExists()) {
+            if(regionBucket.delete()) log.info("Bucket deleted successfully. Reloading coordinates...");
+        }
+        else {
             new RegionsParser().updateRegions(regionBucketName, geoJsonRegionPolygonFileName);
             log.info("Bucket added.");
         }
@@ -35,7 +47,7 @@ public class TestAllRegions {
 
     @Test
     public void printAllRegionCoordinates(){
-        RBucket<Map<String, ArrayList<ArrayList<Double>>>> regionBucket = this.redissonClient.getBucket("region:polygons");
+        RBucket<Map<String, ArrayList<ArrayList<Double>>>> regionBucket = this.redissonClient.getBucket(this.regionBucketName);
         regionBucket.get().forEach((currentRegion, coordinates) -> {
             System.out.println("\nCurrent region: " + currentRegion + " | Coordinates: \n");
             coordinates.forEach(currentCoordinates -> System.out.println(currentCoordinates.get(0) + " , " + currentCoordinates.get(1)));

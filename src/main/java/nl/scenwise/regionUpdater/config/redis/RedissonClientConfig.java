@@ -30,14 +30,14 @@ public class RedissonClientConfig {
 
         config.useSingleServer()
                 .setAddress(address)
-                .setConnectionMinimumIdleSize(redisProperties.getConnectionMinIdleSize() != null ? redisProperties.getConnectionMinIdleSize() : 64)
-                .setConnectionPoolSize(redisProperties.getConnectionPoolSize() != null ? redisProperties.getConnectionPoolSize() : 64)
-                .setSubscriptionConnectionPoolSize(redisProperties.getSubConnectionPoolSize() != null ? redisProperties.getSubConnectionPoolSize() : 64)
-                .setSubscriptionConnectionMinimumIdleSize(redisProperties.getSubConnectionMinIdleSize() != null ? redisProperties.getSubConnectionMinIdleSize() : 64)
-                .setRetryAttempts(redisProperties.getRetryAttempts() != null ? redisProperties.getRetryAttempts() : 3)
+                .setConnectionMinimumIdleSize(redisProperties.getConnectionMinIdleSize() != null ? redisProperties.getConnectionMinIdleSize() : 5)
+                .setConnectionPoolSize(redisProperties.getConnectionPoolSize() != null ? redisProperties.getConnectionPoolSize() : 5)
+                .setSubscriptionConnectionPoolSize(redisProperties.getSubConnectionPoolSize() != null ? redisProperties.getSubConnectionPoolSize() : 0)
+                .setSubscriptionConnectionMinimumIdleSize(redisProperties.getSubConnectionMinIdleSize() != null ? redisProperties.getSubConnectionMinIdleSize() : 0)
+                .setRetryAttempts(redisProperties.getRetryAttempts() != null ? redisProperties.getRetryAttempts() : 10)
                 .setTimeout(redisProperties.getTimeout() != null ? redisProperties.getTimeout() : 99999)
                 .setRetryInterval(redisProperties.getRetryInterval() != null ? redisProperties.getRetryInterval() : 1500)
-                .setIdleConnectionTimeout(redisProperties.getIdleConnectionTimeout() != null ? redisProperties.getIdleConnectionTimeout() : 10000);
+                .setIdleConnectionTimeout(redisProperties.getIdleConnectionTimeout() != null ? redisProperties.getIdleConnectionTimeout() : 99999);
         return config;
     }
 }

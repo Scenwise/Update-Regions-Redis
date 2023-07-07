@@ -1,14 +1,11 @@
 package nl.scenwise.regionUpdater.updator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
 import lombok.extern.slf4j.Slf4j;
-import nl.scenwise.regionUpdater.data.Geometry;
 import nl.scenwise.regionUpdater.data.Regions;
 import nl.scenwise.regionUpdater.service.RedisStreamingUtil;
-import org.redisson.api.*;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,16 +30,15 @@ public class RegionsParser {
     }
 
     private Regions getRegions(String fileNameLocal) {
-        final String fileName = fileNameLocal;
         Regions regions = null;
         try {
-            InputStream inputStream = RegionsParser.class.getClassLoader().getResourceAsStream(fileName);
+            InputStream inputStream = RegionsParser.class.getClassLoader().getResourceAsStream(fileNameLocal);
             if (inputStream != null) {
                 regions = this.om.readValue(inputStream, Regions.class);
 
                 // Use the parsed geometry object as needed
             } else {
-                log.warn("Could not find the GeoJSON file: " + fileName);
+                log.warn("Could not find the GeoJSON file: " + fileNameLocal);
             }
         } catch (IOException e) {
             log.warn("Error reading the GeoJSON file: " + e.getMessage());
@@ -58,6 +54,13 @@ public class RegionsParser {
             regionPolygons.put(currentRegion.properties.label, currentRegion.geometry.coordinates.get(0));
         });
         regionPolygonBuckets.set(regionPolygons);
+
+        // Wait 5 seconds as it can time for redis streams to update it on their end
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
